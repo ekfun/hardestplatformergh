@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hardest Platformer - SchoolFlashCards3</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: black;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        #gameCanvas {
+            display: block;
+            margin: 0 auto;
+            background-color: #202020;
+        }
+
+        .level-info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 20px;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 40px;
+            color: red;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="level-info">Level: <span id="level-number">1</span></div>
+    <div class="game-over" id="game-over">Game Over</div>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let level = 1;
+        let player = { x: 50, y: 550, width: 20, height: 20, color: 'white', velocityX: 0, velocityY: 0 };
+        let gravity = 0.5;
+        let friction = 0.85;
+        let keys = {};
+        let obstacles = [];
+        let finish = { x: 750, y: 550, width: 40, height: 40, color: 'gold' };
+        let gameOver = false;
+
+        function generateLevel(levelNumber) {
+            obstacles = [];
+            if (levelNumber === 1) {
+                obstacles.push({ x: 200, y: 500, width: 100, height: 20, color: 'red' });
+                obstacles.push({ x: 400, y: 450, width: 100, height: 20, color: 'red' });
+                obstacles.push({ x: 600, y: 400, width: 100, height: 20, color: 'red' });
+            }
+            if (levelNumber === 2) {
+                obstacles.push({ x: 200, y: 300, width: 150, height: 20, color: 'red' });
+                obstacles.push({ x: 450, y: 250, width: 150, height: 20, color: 'red' });
+                obstacles.push({ x: 700, y: 200, width: 150, height: 20, color: 'red' });
+            }
+            if (levelNumber === 3) {
+                obstacles.push({ x: 100, y: 500, width: 200, height: 20, color: 'red' });
+                obstacles.push({ x: 350, y: 400, width: 200, height: 20, color: 'red' });
+                obstacles.push({ x: 600, y: 300, width: 200, height: 20, color: 'red' });
+            }
+            if (levelNumber === 4) {
+                obstacles.push({ x: 200, y: 500, width: 300, height: 20, color: 'red' });
+                obstacles.push({ x: 550, y: 400, width: 300, height: 20, color: 'red' });
+            }
+            if (levelNumber === 5) {
+                obstacles.push({ x: 100, y: 500, width: 350, height: 20, color: 'red' });
+                obstacles.push({ x: 500, y: 400, width: 350, height: 20, color: 'red' });
+            }
+        }
+
+        function drawPlayer() {
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+        }
+
+        function drawObstacles() {
+            obstacles.forEach(obstacle => {
+                ctx.fillStyle = obstacle.color;
+                ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+            });
+        }
+
+        function drawFinish() {
+            ctx.fillStyle = finish.color;
+            ctx.fillRect(finish.x, finish.y, finish.width, finish.height);
+        }
+
+        function updatePlayer() {
+            if (keys['ArrowLeft']) {
+                player.velocityX -= 0.5;
+            }
+            if (keys['ArrowRight']) {
+                player.velocityX += 0.5;
+            }
+            if (keys['ArrowUp'] && player.velocityY === 0) {
+                player.velocityY -= 10;
+            }
+
+            player.velocityY += gravity;
+            player.velocityX *= friction;
+
+            player.x += player.velocityX;
+            player.y += player.velocityY;
+
+            if (player.x < 0) player.x = 0;
+            if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+            if (player.y + player.height > canvas.height) {
+                player.y = canvas.height - player.height;
+                player.velocityY = 0;
+            }
+
+            obstacles.forEach(obstacle => {
+                if (player.x < obstacle.x + obstacle.width &&
+                    player.x + player.width > obstacle.x &&
+                    player.y < obstacle.y + obstacle.height &&
+                    player.y + player.height > obstacle.y) {
+                    gameOver = true;
+                    document.getElementById('game-over').style.display = 'block';
+                }
+            });
+
+            if (player.x < finish.x + finish.width &&
+                player.x + player.width > finish.x &&
+                player.y < finish.y + finish.height &&
+                player.y + player.height > finish.y) {
+                level++;
+                if (level > 5) {
+                    alert('Congratulations! You completed the hardest platformer!');
+                    level = 1;
+                }
+                player.x = 50;
+                player.y = 550;
+                document.getElementById('level-number').textContent = level;
+                generateLevel(level);
+            }
+        }
+
+        function gameLoop() {
+            if (gameOver) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawPlayer();
+            drawObstacles();
+            drawFinish();
+            updatePlayer();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        window.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+        });
+
+        window.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+
+        generateLevel(level);
+        gameLoop();
+    </script>
+</body>
+</html>
